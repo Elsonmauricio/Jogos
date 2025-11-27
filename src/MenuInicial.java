@@ -32,8 +32,8 @@ public class MenuInicial extends JFrame {
         botaoBolas.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                // Abre o jogo de Bolas
-                new Main().main(new String[]{}); // Inicia o jogo de Bolas
+                // Abre o jogo de Bolas (CORRIGIDO)
+                new Main().setVisible(true);
                 dispose(); // Fecha o menu inicial
             }
         });

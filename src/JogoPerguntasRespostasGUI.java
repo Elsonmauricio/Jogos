@@ -156,6 +156,7 @@ public class JogoPerguntasRespostasGUI extends JFrame {
             for (int i = 0; i < 4; i++) {
                 botoesResposta[i].setText("<html><div style='width:250px;padding:5px;'>" + 
                                         p.getRespostas()[i] + "</div></html>");
+                resetarAparenciaBotao(i); // Reseta a aparência para a nova pergunta
             }
             
             labelPontuacao.setText("Pontuação: " + pontuacao + "/" + perguntas.size());
@@ -166,19 +167,35 @@ public class JogoPerguntasRespostasGUI extends JFrame {
     
     private void verificarResposta(int respostaIndex) {
         Pergunta p = perguntas.get(perguntaAtual);
+
+        // Desabilita os botões para evitar cliques múltiplos
+        for (JButton botao : botoesResposta) {
+            botao.setEnabled(false);
+        }
         
         if (respostaIndex == p.getRespostaCorreta()) {
             pontuacao++;
-            JOptionPane.showMessageDialog(this, "Resposta Correta!", "Acertou", JOptionPane.INFORMATION_MESSAGE);
+            botoesResposta[respostaIndex].setBackground(new Color(144, 238, 144)); // Verde claro
         } else {
-            JOptionPane.showMessageDialog(this, 
-                "Resposta Incorreta! A resposta correta era: " + 
-                p.getRespostas()[p.getRespostaCorreta()], 
-                "Errou", JOptionPane.ERROR_MESSAGE);
+            botoesResposta[respostaIndex].setBackground(new Color(255, 182, 193)); // Vermelho claro
+            botoesResposta[p.getRespostaCorreta()].setBackground(new Color(144, 238, 144)); // Mostra a correta em verde
         }
-        
-        perguntaAtual++;
-        mostrarPergunta();
+
+        // Usa um Timer para pausar antes de ir para a próxima pergunta
+        Timer timer = new Timer(1500, new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                perguntaAtual++;
+                mostrarPergunta();
+            }
+        });
+        timer.setRepeats(false); // O timer executa apenas uma vez
+        timer.start();
+    }
+
+    private void resetarAparenciaBotao(int index) {
+        botoesResposta[index].setEnabled(true);
+        botoesResposta[index].setBackground(new Color(240, 240, 240));
     }
     
     private void mostrarResultadoFinal() {

@@ -106,51 +106,69 @@ public class DamasGUI extends JFrame {
         }
 
         @Override
-public void actionPerformed(ActionEvent e) {
-    if (!tabuleiro.podeMoverOutraPeca(linha, coluna)) {
-        JOptionPane.showMessageDialog(DamasGUI.this, 
-            "Você deve continuar capturando com esta peça!");
-        return;
+        public void actionPerformed(ActionEvent e) {
+            tratarClique(linha, coluna);
+        }
     }
-            
-    if (linhaOrigem == -1 && colunaOrigem == -1) {
-        // Seleciona a peça de origem
+
+    private void tratarClique(int linha, int coluna) {
+        // Caso 1: Forçado a continuar uma captura múltipla com outra peça.
+        if (!tabuleiro.podeMoverOutraPeca(linha, coluna)) {
+            JOptionPane.showMessageDialog(this, "Você deve continuar capturando com a peça destacada!");
+            return;
+        }
+
+        // Caso 2: Nenhuma peça selecionada ainda. Tenta selecionar uma.
+        if (linhaOrigem == -1) {
+            selecionarPeca(linha, coluna);
+        } 
+        // Caso 3: Clicou na peça já selecionada. Cancela a seleção.
+        else if (linhaOrigem == linha && colunaOrigem == coluna) {
+            cancelarSelecao();
+        } 
+        // Caso 4: Uma peça está selecionada e clicou em outro lugar. Tenta mover.
+        else {
+            tentarMoverPeca(linha, coluna);
+        }
+    }
+
+    private void selecionarPeca(int linha, int coluna) {
         Peca peca = tabuleiro.getPeca(linha, coluna);
         if (peca != null && peca.isBranca() == tabuleiro.getTurnoBranco()) {
             linhaOrigem = linha;
             colunaOrigem = coluna;
             botoes[linha][coluna].setBackground(Color.CYAN); // Destaca a peça selecionada
-            destacarMovimentosValidos(linha, coluna); // Destaca os movimentos válidos
+            destacarMovimentosValidos(linha, coluna);
         }
-    } else if (linhaOrigem == linha && colunaOrigem == coluna) {
-        // Cancela a seleção da peça ao clicar duas vezes nela
-        botoes[linha][coluna].setBackground((linha + coluna) % 2 == 0 ? Color.WHITE : Color.DARK_GRAY);
+    }
+
+    private void cancelarSelecao() {
         linhaOrigem = -1;
         colunaOrigem = -1;
-        atualizarTabuleiro(); // Atualiza o tabuleiro para remover os destaques
-    } else  {
-        // Tenta mover a peça para o destino
-        if (tabuleiro.validarMovimento(linhaOrigem, colunaOrigem, linha, coluna)) {
-            tabuleiro.moverPeca(linhaOrigem, colunaOrigem, linha, coluna);
+        atualizarTabuleiro(); // Remove todos os destaques
+    }
+
+    private void tentarMoverPeca(int linhaDestino, int colunaDestino) {
+        if (tabuleiro.validarMovimento(linhaOrigem, colunaOrigem, linhaDestino, colunaDestino)) {
+            tabuleiro.moverPeca(linhaOrigem, colunaOrigem, linhaDestino, colunaDestino);
+            
+            // Verifica se o turno mudou. Se não mudou, é uma captura múltipla.
+            if (tabuleiro.getUltimaPecaMovida() != null) {
+                // Mantém a seleção na peça que acabou de capturar para a próxima jogada.
+                linhaOrigem = linhaDestino;
+                colunaOrigem = colunaDestino;
+            } else {
+                // O movimento terminou, reseta a seleção.
+                linhaOrigem = -1;
+                colunaOrigem = -1;
+            }
+
             atualizarTabuleiro();
             statusLabel.setText(tabuleiro.getTurnoBranco() ? "Vez das Brancas" : "Vez das Pretas");
 
-                    // Verifica se há mais capturas possíveis
-                    if (tabuleiro.existeCapturaDisponivel(tabuleiro.getTurnoBranco())){
-                        linhaOrigem = linha;
-                        colunaOrigem = coluna;
-                        botoes[linha][coluna].setBackground(Color.CYAN); // Mantém a peça selecionada
-                        destacarMovimentosValidos(linha, coluna); // Destaca os movimentos válidos
-                    } else {
-                        // Reseta a seleção
-                        botoes[linhaOrigem][colunaOrigem].setBackground((linhaOrigem + colunaOrigem) % 2 == 0 ? Color.WHITE : Color.DARK_GRAY);
-                        linhaOrigem = -1;
-                        colunaOrigem = -1;
-                    }
-                } else {
-                    JOptionPane.showMessageDialog(DamasGUI.this, "Movimento inválido!");
-                }
-            }
+        } else {
+            JOptionPane.showMessageDialog(this, "Movimento inválido!");
+            cancelarSelecao();
         }
     }
 
